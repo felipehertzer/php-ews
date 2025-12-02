@@ -7,6 +7,7 @@ use garethp\ews\API;
 use garethp\ews\API\ExchangeAutodiscover as Autodiscover;
 use garethp\ews\API\Exception\AutodiscoverFailed;
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 class ExchangeAutodiscoverTest extends TestCase
 {
@@ -27,18 +28,33 @@ class ExchangeAutodiscoverTest extends TestCase
             $auth = json_decode(file_get_contents(getcwd() . '/Resources/auth.json'), true);
         }
 
-        $client = Autodiscover::getAPI(
-            $auth['user'],
-            $auth['password'],
-            $auth['user'],
-            [
-                'httpPlayback' => [
-                    'mode' => $mode,
-                    'recordFileName' => self::class . '.' . $this->getName() . '.json',
-                    'recordLocation' => realpath(__DIR__ . '/../../../Resources/recordings') . '/'
+        if (isset($auth['token'])) {
+            $client = Autodiscover::getAPI(
+                $auth['user'],
+                $auth['password'],
+                $auth['user'],
+                [
+                    'httpPlayback' => [
+                        'mode' => $mode,
+                        'recordFileName' => self::class . '.' . $this->name() . '.json',
+                        'recordLocation' => realpath(__DIR__ . '/../../../Resources/recordings') . '/'
+                    ]
                 ]
-            ]
-        );
+            );
+        } else {
+            $client = Autodiscover::getAPI(
+                $auth['user'],
+                $auth['password'],
+                $auth['user'],
+                [
+                    'httpPlayback' => [
+                        'mode' => $mode,
+                        'recordFileName' => self::class . '.' . $this->name() . '.json',
+                        'recordLocation' => realpath(__DIR__ . '/../../../Resources/recordings') . '/'
+                    ]
+                ]
+            );
+        }
 
         $this->assertInstanceOf(API::class, $client);
     }
@@ -58,7 +74,7 @@ class ExchangeAutodiscoverTest extends TestCase
             [
                 'httpPlayback' => [
                     'mode' => $mode,
-                    'recordFileName' => self::class . '.' . $this->getName() . '.json',
+                    'recordFileName' => self::class . '.' . $this->name() . '.json',
                     'recordLocation' => realpath(__DIR__ . '/../../../Resources/recordings') . '/'
                 ]
             ]
@@ -67,12 +83,7 @@ class ExchangeAutodiscoverTest extends TestCase
         $this->assertInstanceOf(API::class, $client);
     }
 
-    /**
-     * @dataProvider serverVersionProvider
-     *
-     * @param $hex
-     * @param $expectedVersion
-     */
+    #[DataProvider('serverVersionProvider')]
     public function testParseServerVersion($hex, $expectedVersion)
     {
         $reflectedClass = new \ReflectionClass(Autodiscover::class);
@@ -87,7 +98,7 @@ class ExchangeAutodiscoverTest extends TestCase
     /**
      * @TODO: Needs more, and better, test values
      */
-    public function serverVersionProvider()
+    public static function serverVersionProvider()
     {
         return [
             ['73C08484', 'Exchange2013_SP1'],
